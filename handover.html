@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handover Técnico & Validação Arquitetural - Monotto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0fdfa', 100: '#ccfbf1', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 900: '#134e4a' },
+                        tech: { 800: '#1e293b', 900: '#0f172a' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+        }
+
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #0ea5e9, #2563eb);
+            opacity: 0.8;
+        }
+
+        .section-risk::before { background: linear-gradient(to bottom, #ef4444, #b91c1c); }
+
+        .required-label::after { content: "*"; color: #ef4444; margin-left: 4px; font-weight: bold; }
+        .optional-badge { background: #f1f5f9; color: #64748b; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+
+        /* Inputs modernos */
+        input:not([type="checkbox"]):not([type="file"]), select, textarea {
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+        }
+        input:not([type="checkbox"]):not([type="file"]):focus, select:focus, textarea:focus {
+            background-color: #ffffff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Configuração da URL do Backend (Definitiva) -->
+    <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/a/macros/colbiz.io/s/AKfycbyKtVis11WjIGoBsVCY3dQGidCWxDS5w6DxUNuh3JMxsCNqEamyoY64_2s5VQ3AG60N/exec";
+    </script>
+
+    <!-- Topbar Decorativa -->
+    <div class="h-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-600 w-full fixed top-0 z-50"></div>
+
+    <!-- Header -->
+    <header class="bg-tech-900 text-white pt-8 pb-12 shadow-xl relative overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#64748b 1px, transparent 1px); background-size: 24px 24px;"></div>
+        
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="bg-blue-600/20 text-blue-300 text-xs font-mono px-2 py-1 rounded border border-blue-500/30">MONOTTO TECH</span>
+                        <span class="bg-green-600/20 text-green-300 text-xs font-mono px-2 py-1 rounded border border-green-500/30">STATUS: HANDOVER</span>
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white mb-1">Validação Técnica</h1>
+                    <p class="text-slate-400 text-sm md:text-base max-w-xl">Protocolo oficial de transferência de infraestrutura e aplicação.</p>
+                </div>
+                
+                <div class="flex flex-col items-end gap-2 w-full md:w-auto">
+                    <div class="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-3 flex items-center justify-between gap-4 w-full md:w-auto">
+                        <span id="lastSaved" class="text-xs text-slate-400 font-mono flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-600" id="statusDot"></span>
+                            Não salvo
+                        </span>
+                        <button onclick="saveDraft()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded transition flex items-center gap-2 border border-slate-600">
+                            <i class="fas fa-save"></i> Salvar Rascunho
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 -mt-8 pb-20 relative z-20">
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- Sidebar Navigation -->
+            <aside class="lg:w-1/4 hidden lg:block">
+                <div class="sticky top-8">
+                    <nav class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-50 p-4 border-b border-slate-200">
+                            <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Índice</h3>
+                        </div>
+                        <ul class="py-2 text-sm font-medium text-slate-600">
+                            <li><a href="#s-intro" class="nav-item flex items-center px-4 py-3 hover:bg-slate-50 transition border-r-4 border-transparent"><i class="fas fa-id-card w-6 text-slate-400"></i> Identificação</a></li>
+                            <li><a href="#s-env" class="nav-item flex items-center px-4 py-3 hover:bg-slate-50 transition border-r-4 border-transparent"><i class="fas fa-server w-6 text-slate-400"></i> Ambiente & Node</a></li>
+                            <li><a href="#s-aws" class="nav-item flex items-center px-4 py-3 hover:bg-slate-50 transition border-r-4 border-transparent"><i class="fab fa-aws w-6 text-slate-400"></i> Infra AWS</a></li>
+                            <li><a href="#s-access" class="nav-item flex items-center px-4 py-3 hover:bg-slate-50 transition border-r-4 border-transparent"><i class="fas fa-key w-6 text-slate-400"></i> Acessos & IAM</a></li>
+                            <li><a href="#s-arch" class="nav-item flex items-center px-4 py-3 hover:bg-slate-50 transition border-r-4 border-transparent"><i class="fas fa-sitemap w-6 text-slate-400"></i> Arquitetura</a></li>
+                            <li><a href="#s-cost" class="nav-item flex items-center px-4 py-3 hover:bg-slate-50 transition border-r-4 border-transparent"><i class="fas fa-coins w-6 text-slate-400"></i> Custos</a></li>
+                            <li><a href="#s-risk" class="nav-item flex items-center px-4 py-3 hover:bg-slate-50 transition border-r-4 border-transparent"><i class="fas fa-shield-alt w-6 text-slate-400"></i> Riscos</a></li>
+                        </ul>
+                    </nav>
+
+                    <div class="mt-6 bg-white rounded-xl shadow-lg border border-slate-200 p-5">
+                        <button onclick="submitForm()" id="submitBtn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transform active:scale-95 transition-all duration-200 flex items-center justify-center group">
+                            <span>ENVIAR HANDOVER</span> 
+                            <i class="fas fa-paper-plane ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                        <p class="text-[10px] text-center text-slate-400 mt-3 px-2 leading-tight">Ao enviar, você certifica que as informações prestadas são verdadeiras e refletem o estado atual da produção.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Mobile Nav Toggle -->
+            <div class="lg:hidden mb-4 w-full">
+                <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                    <details>
+                        <summary class="font-bold text-slate-700 cursor-pointer flex justify-between items-center">
+                            Menu de Navegação <i class="fas fa-chevron-down text-blue-500"></i>
+                        </summary>
+                        <ul class="mt-4 space-y-2 text-sm">
+                            <li><a href="#s-intro" class="block p-2 text-blue-600 bg-blue-50 rounded">Ir para o Formulário</a></li>
+                        </ul>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="lg:w-3/4 space-y-8" id="mainForm">
+
+                <!-- Section 1: Identificação -->
+                <section id="s-intro" class="section-card p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="bg-blue-100 text-blue-600 p-2 rounded-lg"><i class="fas fa-user-circle text-xl"></i></div>
+                        <h2 class="text-xl font-bold text-slate-800">Identificação do Responsável</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="group">
+                            <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Nome Completo</label>
+                            <div class="relative">
+                                <i class="fas fa-user absolute left-3 top-3.5 text-slate-400"></i>
+                                <input type="text" name="resp_name" class="w-full pl-10 p-3 rounded-lg border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Seu nome" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Cargo / Função Técnica</label>
+                            <div class="relative">
+                                <i class="fas fa-briefcase absolute left-3 top-3.5 text-slate-400"></i>
+                                <input type="text" name="resp_role" class="w-full pl-10 p-3 rounded-lg border-slate-200" placeholder="Ex: Tech Lead" required>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Email Corporativo</label>
+                            <div class="relative">
+                                <i class="fas fa-envelope absolute left-3 top-3.5 text-slate-400"></i>
+                                <input type="email" name="resp_email" class="w-full pl-10 p-3 rounded-lg border-slate-200" placeholder="email@empresa.com" required>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Ambiente -->
+                <section id="s-env" class="section-card p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><i class="fas fa-code-branch text-xl"></i></div>
+                        <h2 class="text-xl font-bold text-slate-800">Ambiente e Versionamento</h2>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8 flex gap-4 items-start shadow-sm">
+                        <i class="fas fa-exclamation-triangle text-amber-500 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-amber-800 text-sm uppercase">Requisito Bloqueante: Node 20</h4>
+                            <p class="text-sm text-amber-700 mt-1">Identificamos o uso de Node 16 no <code>package.json</code>. A migração para Node 20 é mandatória para aceitação deste projeto. O handover será rejeitado sem este aceite.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Versão Node.js (Produção)</label>
+                                <input type="text" name="node_version" placeholder="Ex: 16.17.1" class="w-full p-3 rounded-lg border-slate-200 font-mono text-sm" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Confirma ciência da migração?</label>
+                                <div class="relative">
+                                    <select name="node_migration_ack" class="w-full p-3 rounded-lg border-slate-200 appearance-none bg-white font-medium text-slate-700" required>
+                                        <option value="">Selecione uma opção...</option>
+                                        <option value="Sim">Sim, estamos cientes e mapeamos os impactos</option>
+                                        <option value="Nao">Não (Justificar detalhadamente abaixo)</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-3 top-4 text-slate-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Pacotes/Libs Incompatíveis</label>
+                            <p class="text-xs text-slate-400 mb-2">Liste bibliotecas que quebrarão na atualização (Ex: `node-sass`, AWS SDK v2, TypeORM versões antigas).</p>
+                            <textarea name="node_incompatibilities" rows="3" class="w-full p-3 rounded-lg border-slate-200 font-mono text-sm" placeholder="- Lib X (v1.0)&#10;- Lib Y..." required></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Pipeline de Build</label>
+                                <p class="text-xs text-slate-400 mb-2">Descreva a ordem EXATA de execução.</p>
+                                <textarea name="pipeline_order" rows="5" class="w-full p-3 rounded-lg border-slate-200 font-mono text-xs bg-slate-50" placeholder="1. yarn install&#10;2. yarn build:back&#10;3. serverless deploy..." required></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Variáveis de Ambiente (.env)</label>
+                                <p class="text-xs text-slate-400 mb-2">Apenas CHAVES (Keys), sem valores.</p>
+                                <textarea name="env_vars" rows="5" class="w-full p-3 rounded-lg border-slate-200 font-mono text-xs bg-slate-50" placeholder="DB_HOST&#10;AWS_ACCESS_KEY_ID&#10;FIREBASE_CONFIG..." required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: AWS -->
+                <section id="s-aws" class="section-card p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="bg-orange-100 text-orange-600 p-2 rounded-lg"><i class="fab fa-aws text-xl"></i></div>
+                        <h2 class="text-xl font-bold text-slate-800">Infraestrutura AWS</h2>
+                    </div>
+
+                    <p class="text-sm text-slate-500 mb-6 bg-blue-50 p-3 rounded border border-blue-100"><i class="fas fa-info-circle mr-1"></i> Selecione os serviços ativos. Para cada seleção, detalhe a configuração técnica crítica (ex: tamanho de instância, concorrência, endpoints).</p>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-8">
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="Lambda" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>Lambda</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="API Gateway" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>API Gateway</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="S3" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>S3</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="RDS" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>RDS</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="DynamoDB" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>DynamoDB</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="SQS" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>SQS</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="SNS" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>SNS</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="CloudFront" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>CloudFront</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="Secrets Manager" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>Secrets Mgr</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="checkbox" name="aws_services" value="VPC" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-blue-300 flex items-center justify-between">
+                                <span>VPC</span>
+                                <i class="fas fa-check opacity-0 peer-checked:opacity-100 text-blue-500"></i>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div id="awsDetailsContainer" class="space-y-4">
+                        <div class="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg text-slate-400 bg-slate-50/50">
+                            <i class="fas fa-cubes text-3xl mb-2 opacity-50"></i>
+                            <p class="text-sm">Selecione serviços acima para abrir os campos de detalhamento.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4: Acessos -->
+                <section id="s-access" class="section-card p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="bg-purple-100 text-purple-600 p-2 rounded-lg"><i class="fas fa-fingerprint text-xl"></i></div>
+                        <h2 class="text-xl font-bold text-slate-800">Acessos e Permissões</h2>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">ID da Conta AWS (Produção)</label>
+                                <input type="text" name="aws_account_id" class="w-full p-3 rounded-lg border-slate-200 font-mono" placeholder="123456789012" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Região Principal</label>
+                                <input type="text" name="aws_region" value="us-east-1" class="w-full p-3 rounded-lg border-slate-200 font-mono" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Políticas IAM Específicas</label>
+                            <p class="text-xs text-slate-400 mb-2">Permissões granulares necessárias (evite 'AdministratorAccess').</p>
+                            <textarea name="iam_policies" rows="3" class="w-full p-3 rounded-lg border-slate-200 font-mono text-xs" placeholder="iam:PassRole, s3:PutObject em buckets específicos..." required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Restrições de Rede/VPN</label>
+                            <p class="text-xs text-slate-400 mb-2">Liste Security Groups críticos ou acessos restritos a IP/VPN.</p>
+                            <input type="text" name="network_restrictions" class="w-full p-3 rounded-lg border-slate-200" placeholder="Ex: RDS acessível apenas via Bastion Host 10.0.0.5" required>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Arquitetura -->
+                <section id="s-arch" class="section-card p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="bg-teal-100 text-teal-600 p-2 rounded-lg"><i class="fas fa-project-diagram text-xl"></i></div>
+                        <h2 class="text-xl font-bold text-slate-800">Arquitetura</h2>
+                    </div>
+                    
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <label class="block text-sm font-bold text-slate-700 mb-3 required-label">Diagrama Atualizado</label>
+                        <div class="flex items-center justify-center w-full">
+                            <label for="architecture_file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-slate-50 transition group">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-3 group-hover:text-blue-500 transition-colors"></i>
+                                    <p class="text-sm text-slate-500"><span class="font-semibold text-blue-600">Clique para upload</span> ou arraste</p>
+                                    <p class="text-xs text-slate-400">PNG, JPG ou PDF (Max. 2MB)</p>
+                                    <p id="fileNameDisplay" class="text-xs text-teal-600 font-bold mt-2 hidden bg-teal-50 px-2 py-1 rounded border border-teal-200"></p>
+                                </div>
+                                <input id="architecture_file" type="file" class="hidden" accept=".png,.jpg,.jpeg,.pdf" />
+                                <input type="hidden" name="architecture_file_base64" id="architecture_file_base64">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex items-start space-x-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                        <input type="checkbox" name="arch_validation" id="arch_validation" class="mt-1 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" required>
+                        <label for="arch_validation" class="text-xs text-slate-600 font-medium cursor-pointer">
+                            Declaro formalmente que o diagrama anexado representa fielmente a infraestrutura em execução e que não existem recursos "fantasmas" não documentados.
+                        </label>
+                    </div>
+                </section>
+
+                 <!-- Section 6: Custos -->
+                 <section id="s-cost" class="section-card p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><i class="fas fa-money-bill-wave text-xl"></i></div>
+                        <h2 class="text-xl font-bold text-slate-800">Custos e Consumo</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100">
+                            <label class="block text-xs font-bold text-emerald-800 mb-2 uppercase tracking-wide required-label">Média Mensal (USD)</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2.5 text-emerald-600 font-bold">$</span>
+                                <input type="number" name="avg_cost" class="w-full pl-6 p-2 rounded border-emerald-200 focus:border-emerald-500 focus:ring-emerald-200 bg-white" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Maior Ofensor de Custo</label>
+                            <input type="text" name="highest_cost_service" class="w-full p-3 rounded-lg border-slate-200" placeholder="Ex: RDS Multi-AZ (Produção)" required>
+                        </div>
+                    </div>
+                    <!-- Otimização (Opcional) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-2">Oportunidade de Savings <span class="optional-badge">Opcional</span></label>
+                        <p class="text-xs text-slate-400 mb-2">Identificou recursos ociosos ou superdimensionados?</p>
+                        <textarea name="cost_savings" rows="2" class="w-full p-3 rounded-lg border-slate-200 bg-slate-50" placeholder="Ex: Ambientes de Dev ligados 24/7..."></textarea>
+                    </div>
+                </section>
+
+                 <!-- Section 7: Riscos -->
+                 <section id="s-risk" class="section-card section-risk p-6 md:p-8 border-l-4 border-l-red-500">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="bg-red-100 text-red-600 p-2 rounded-lg"><i class="fas fa-biohazard text-xl"></i></div>
+                        <h2 class="text-xl font-bold text-slate-800">Riscos Técnicos</h2>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold text-red-800 mb-2 required-label">Pendências Críticas (Showstoppers)</label>
+                            <p class="text-xs text-red-400 mb-2">O que impede o deploy ou a operação segura HOJE?</p>
+                            <textarea name="critical_risks" rows="3" class="w-full p-3 rounded-lg border-red-200 bg-red-50 focus:border-red-400 focus:ring-red-100" placeholder="Ex: Certificados SSL expirando, Backups falhando..." required></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-600 mb-2 required-label">Limitações Arquiteturais</label>
+                                <textarea name="arch_limitations" rows="3" class="w-full p-3 rounded-lg border-slate-200" placeholder="Ex: Cold starts altos, query lento no Postgres..." required></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-600 mb-2">Débitos Técnicos <span class="optional-badge">Opcional</span></label>
+                                <textarea name="tech_debt" rows="3" class="w-full p-3 rounded-lg border-slate-200 bg-slate-50" placeholder="Ex: Refatoração necessária no módulo de Auth..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer do Form Mobile -->
+                <div class="lg:hidden mt-8 space-y-4">
+                    <button onclick="submitForm()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg shadow-lg">ENVIAR AGORA</button>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm font-medium mb-2">VALIDAÇÃO DE INFRAESTRUTURA & HANDOVER</p>
+            <p class="text-xs text-slate-600">Este documento é confidencial e de uso exclusivo da equipe de engenharia.</p>
+        </div>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        // --- UI Interactions ---
+        
+        // AWS Dynamic Fields
+        const awsCheckboxes = document.querySelectorAll('input[name="aws_services"]');
+        const awsContainer = document.getElementById('awsDetailsContainer');
+
+        awsCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateAwsDetails);
+        });
+
+        function updateAwsDetails() {
+            const selected = Array.from(document.querySelectorAll('input[name="aws_services"]:checked')).map(cb => cb.value);
+            
+            // Se vazio
+            if (selected.length === 0) {
+                awsContainer.innerHTML = `
+                    <div class="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg text-slate-400 bg-slate-50/50">
+                        <i class="fas fa-cubes text-3xl mb-2 opacity-50"></i>
+                        <p class="text-sm">Selecione serviços acima para configurar detalhes.</p>
+                    </div>`;
+                return;
+            }
+
+            // Remove box de 'vazio' se existir
+            if (awsContainer.querySelector('.text-center')) {
+                awsContainer.innerHTML = '';
+            }
+
+            // Adiciona novos inputs dinamicamente
+            selected.forEach(service => {
+                const id = `aws_detail_${service.replace(/\s/g, '')}`;
+                if (!document.getElementById(id)) {
+                    // Placeholders inteligentes baseados no serviço
+                    let configPlaceholder = "Ex: 512MB RAM, Timeout 30s";
+                    if(service.includes("RDS")) configPlaceholder = "Ex: db.t3.medium, Multi-AZ";
+                    if(service.includes("S3")) configPlaceholder = "Ex: Public Access Block, Versioning";
+                    
+                    const html = `
+                        <div id="${id}" class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm animate-fade-in border-l-4 border-l-blue-400 mb-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-bold text-slate-700 flex items-center gap-2">
+                                    <i class="fab fa-aws text-orange-500"></i> ${service}
+                                </h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase required-label">Finalidade</label>
+                                    <input type="text" name="aws_purpose_${service}" placeholder="Para que serve este recurso?" class="w-full mt-1 p-2 rounded border border-slate-200 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-200" required>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase required-label">Configuração Crítica</label>
+                                    <input type="text" name="aws_config_${service}" placeholder="${configPlaceholder}" class="w-full mt-1 p-2 rounded border border-slate-200 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-200" required>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    awsContainer.insertAdjacentHTML('beforeend', html);
+                }
+            });
+
+            // Remove desmarcados
+            Array.from(awsContainer.children).forEach(div => {
+                if (div.querySelector('h4')) {
+                    const serviceName = div.querySelector('h4').innerText.trim();
+                    if (!selected.includes(serviceName)) {
+                        div.remove();
+                    }
+                }
+            });
+        }
+
+        // File Handling with Style & Base64
+        document.getElementById('architecture_file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const display = document.getElementById('fileNameDisplay');
+            
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) { 
+                    alert("Arquivo muito grande. Limite de 2MB.");
+                    this.value = "";
+                    display.classList.add('hidden');
+                    return;
+                }
+                
+                display.innerText = `Arquivo selecionado: ${file.name}`;
+                display.classList.remove('hidden');
+
+                const reader = new FileReader();
+                reader.onload = function(readerEvt) {
+                    document.getElementById('architecture_file_base64').value = readerEvt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Save & Load Draft Logic (LocalStorage)
+        function saveDraft() {
+            const formData = {};
+            const elements = document.querySelectorAll('input, textarea, select');
+            elements.forEach(el => {
+                if (el.name && el.type !== 'file') {
+                    if (el.type === 'checkbox') {
+                        if (!formData[el.name]) formData[el.name] = [];
+                        if (el.checked) formData[el.name].push(el.value);
+                    } else {
+                        formData[el.name] = el.value;
+                    }
+                }
+            });
+            
+            localStorage.setItem('monotto_handover_draft_v3', JSON.stringify(formData));
+            
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            document.getElementById('lastSaved').innerHTML = `<i class="fas fa-check text-green-400"></i> Salvo às ${timeStr}`;
+            document.getElementById('statusDot').classList.remove('bg-slate-600');
+            document.getElementById('statusDot').classList.add('bg-green-500');
+            
+            // Visual feedback on button
+            const btn = document.querySelector('button[onclick="saveDraft()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-check"></i> Salvo!`;
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }
+
+        function loadDraft() {
+            const draft = localStorage.getItem('monotto_handover_draft_v3');
+            if (draft) {
+                try {
+                    const data = JSON.parse(draft);
+                    
+                    for (const key in data) {
+                        const el = document.querySelector(`[name="${key}"]`);
+                        if (el) {
+                            if (el.type === 'checkbox') {
+                                // Restore checkboxes specifically for AWS
+                                if (key === 'aws_services') {
+                                    data[key].forEach(val => {
+                                        const cb = document.querySelector(`input[name="aws_services"][value="${val}"]`);
+                                        if (cb) cb.checked = true;
+                                    });
+                                    updateAwsDetails(); // Trigger UI update
+                                }
+                            } else {
+                                el.value = data[key];
+                            }
+                        }
+                    }
+                    // Restore dynamic inputs (AWS details)
+                    setTimeout(() => {
+                        for (const key in data) {
+                            if (key.startsWith('aws_purpose_') || key.startsWith('aws_config_')) {
+                                const dynamicEl = document.querySelector(`[name="${key}"]`);
+                                if (dynamicEl) dynamicEl.value = data[key];
+                            }
+                        }
+                    }, 100);
+
+                } catch(e) { console.error("Erro ao carregar rascunho", e); }
+            }
+        }
+
+        // Form Submission
+        function submitForm() {
+            // Validação simples
+            const required = document.querySelectorAll('[required]');
+            let valid = true;
+            let firstInvalid = null;
+
+            required.forEach(el => {
+                if (!el.value || (el.type === 'checkbox' && !el.checked)) {
+                    el.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    valid = false;
+                    if(!firstInvalid) firstInvalid = el;
+                } else {
+                    el.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                }
+            });
+
+            if (!valid) {
+                alert("Existem campos OBRIGATÓRIOS não preenchidos. Verifique os itens em vermelho.");
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Enviando Dados...';
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+            const formData = {};
+            const elements = document.querySelectorAll('input, textarea, select');
+            
+            elements.forEach(el => {
+                if (el.name) {
+                    if (el.type === 'checkbox') {
+                        if (!formData[el.name]) formData[el.name] = [];
+                        if (el.checked) formData[el.name].push(el.value);
+                    } else if(el.type !== 'file') { // Files handled via base64 hidden input
+                        formData[el.name] = el.value;
+                    }
+                }
+            });
+
+            // Coleta dados dinâmicos da AWS explicitamente
+            const awsDetails = {};
+            document.querySelectorAll('input[name^="aws_purpose_"], input[name^="aws_config_"]').forEach(el => {
+                awsDetails[el.name] = el.value;
+            });
+            formData.aws_details = awsDetails;
+
+            formData.submittedAt = new Date().toISOString();
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Importante para GAS quando chamado do front sem proxy
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(() => {
+                // Sucesso
+                const main = document.getElementById('mainForm');
+                main.innerHTML = `
+                    <div class="bg-white p-12 rounded-2xl shadow-xl text-center border border-green-100 animate-fade-in my-12">
+                        <div class="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-2">Handover Registrado!</h2>
+                        <p class="text-slate-500 mb-8 max-w-lg mx-auto">Os dados técnicos foram criptografados e armazenados com segurança na base da Engenharia.</p>
+                        <button onclick="location.reload()" class="text-blue-600 hover:text-blue-800 font-medium underline">Preencher novo formulário</button>
+                    </div>
+                `;
+                localStorage.removeItem('monotto_handover_draft_v3');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erro técnico ao enviar. Verifique o console.");
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            });
+        }
+
+        // Init
+        window.addEventListener('load', loadDraft);
+    </script>
+</body>
+</html>
