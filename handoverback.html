@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria de Drift Backend - Monotto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        tech: { 800: '#1e293b', 900: '#0f172a' },
+                        drift: { 50: '#fef2f2', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        .section-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 4px;
+            background: #3b82f6;
+        }
+        .card-red::before { background: #ef4444; }
+        .card-amber::before { background: #f59e0b; }
+        .card-green::before { background: #10b981; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; p: 0; }
+            .section-card { box-shadow: none !important; border: 1px solid #eee !important; page-break-inside: avoid; margin-bottom: 20px !important; }
+            textarea, input { border: none !important; border-bottom: 1px dashed #ccc !important; background: transparent !important; }
+            .bg-slate-50 { background: transparent !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased font-sans">
+
+    <!-- Header Principal -->
+    <header class="bg-tech-900 text-white pt-10 pb-16 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M0 0h20v20H0V0zm10 10l10 10v-20L10 10zM0 20l10-10L0 0v20z\" fill=\"%2394a3b8\" fill-opacity=\"0.4\" fill-rule=\"evenodd\"%3E%3C/path%3E%3C/svg%3E');"></div>
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-500/30 uppercase tracking-widest">Backend Audit</span>
+                        <span class="bg-red-500/20 text-red-300 text-[10px] font-bold px-2 py-0.5 rounded border border-red-500/30 uppercase tracking-widest">Confidencial</span>
+                    </div>
+                    <h1 class="text-3xl font-black tracking-tight">Handover & Auditoria de Drift</h1>
+                    <p class="text-slate-400 mt-1 max-w-2xl font-medium">Análise técnica comparativa: Documentação Oficial 2024 vs. Implementação Real no Código.</p>
+                </div>
+                <div class="no-print flex gap-3">
+                    <button onclick="saveDraft()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition border border-slate-700 flex items-center gap-2">
+                        <i class="fas fa-save text-slate-400"></i> Salvar Rascunho
+                    </button>
+                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-blue-900/20 transition flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i> GERAR RELATÓRIO PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 -mt-8 pb-20">
+        <form id="auditForm" class="space-y-8">
+            
+            <!-- SEÇÃO 1: IDENTIFICAÇÃO -->
+            <section class="section-card p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i class="fas fa-id-badge"></i></div>
+                    <h2 class="text-lg font-bold text-slate-800 uppercase tracking-tight">Contexto da Auditoria</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Responsável Técnico</label>
+                        <input type="text" name="auditor" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none" placeholder="Nome do auditor">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Data da Extração</label>
+                        <input type="date" name="audit_date" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Branch/Hash Referência</label>
+                        <input type="text" name="git_ref" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm" placeholder="Ex: main [a1b2c3d]">
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 2: RUNTIME & DEPENDÊNCIAS (Foco no Node 20) -->
+            <section class="section-card card-amber p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-amber-100 text-amber-600 rounded-lg"><i class="fas fa-microchip"></i></div>
+                    <h2 class="text-lg font-bold text-slate-800 uppercase tracking-tight">Runtime & Compliance de Versão</h2>
+                </div>
+                <div class="bg-amber-50 border border-amber-100 p-4 rounded-lg mb-6 flex gap-4">
+                    <i class="fas fa-exclamation-circle text-amber-500 mt-1"></i>
+                    <p class="text-xs text-amber-800 leading-relaxed">
+                        <strong>ALERTA DE DRIFT:</strong> A documentação de 2024 exige Node 16.17.1. 
+                        O código atual suporta Node 20? Verifique o `engines` no `package.json` e o `Dockerfile`.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2 italic">No Código Atual:</label>
+                        <textarea name="runtime_real" rows="3" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-mono text-xs" placeholder='Ex: "engines": { "node": ">=20" }'></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2 italic">Divergência Detectada:</label>
+                        <textarea name="runtime_drift" rows="3" class="w-full p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-700" placeholder="Ex: A documentação diz Node 16, mas o pipeline de CI já usa 20.x..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 3: BANCO DE DADOS E PERSISTÊNCIA -->
+            <section class="section-card card-green p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><i class="fas fa-database"></i></div>
+                    <h2 class="text-lg font-bold text-slate-800 uppercase tracking-tight">Camada de Dados (ORM & Migrations)</h2>
+                </div>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">ORM/Query Builder (Codex Analysis)</label>
+                            <input type="text" name="orm_type" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg" placeholder="Ex: TypeORM / Knex / Prisma">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Última Migration Aplicada</label>
+                            <input type="text" name="last_migration" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm" placeholder="Nome do arquivo da última migration">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Drift de Schema</label>
+                        <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-wide">Tabelas ou relações documentadas que não existem ou vice-versa.</p>
+                        <textarea name="db_drift" rows="3" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm" placeholder="Descreva aqui se o banco real reflete o modelo da documentação..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 4: INFRA E VARIÁVEIS (AWS / ENV) -->
+            <section class="section-card p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-orange-100 text-orange-600 rounded-lg"><i class="fab fa-aws"></i></div>
+                    <h2 class="text-lg font-bold text-slate-800 uppercase tracking-tight">Infraestrutura & Envs Críticas</h2>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 space-y-4">
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Serviços AWS Ativos (Código):</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 border rounded-lg cursor-pointer hover:bg-white transition">
+                                <input type="checkbox" name="aws_lambda" class="w-4 h-4 text-blue-600">
+                                <span class="text-sm font-medium">Lambda / Serverless</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 border rounded-lg cursor-pointer hover:bg-white transition">
+                                <input type="checkbox" name="aws_sqs" class="w-4 h-4 text-blue-600">
+                                <span class="text-sm font-medium">SQS / SNS (Async)</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 border rounded-lg cursor-pointer hover:bg-white transition">
+                                <input type="checkbox" name="aws_rds" class="w-4 h-4 text-blue-600">
+                                <span class="text-sm font-medium">RDS (Postgres)</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 border rounded-lg cursor-pointer hover:bg-white transition">
+                                <input type="checkbox" name="aws_s3" class="w-4 h-4 text-blue-600">
+                                <span class="text-sm font-medium">S3 Buckets</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2 text-red-500"><i class="fas fa-key mr-1"></i> Variáveis de Ambiente "Fantasmas":</label>
+                        <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-wide">Variáveis pedidas no código que NÃO estão no .env.example ou na documentação.</p>
+                        <textarea name="ghost_envs" rows="8" class="w-full p-4 bg-slate-900 text-green-400 font-mono text-xs rounded-lg border-none" placeholder="Ex: process.env.NEW_AUTH_SECRET (Não documentado)"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 5: VEREDITO ESTRATÉGICO -->
+            <section class="section-card card-red p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-red-100 text-red-600 rounded-lg"><i class="fas fa-gavel"></i></div>
+                    <h2 class="text-lg font-bold text-slate-800 uppercase tracking-tight">Veredito Final de Drift</h2>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">A documentação de 2024 ainda é confiável?</label>
+                        <select name="trust_level" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold">
+                            <option value="high">Sim - Sincronizada (90%+)</option>
+                            <option value="medium">Parcialmente - Requer atenção em Envs/Deps (60-90%)</option>
+                            <option value="low">Não - Drift Arquitetural Grave (< 50%)</option>
+                            <option value="obsolete">Obsoleta - O código atual é uma nova arquitetura</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 italic">Resumo Executivo para a Liderança:</label>
+                        <textarea name="executive_summary" rows="5" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm leading-relaxed" placeholder="Resuma as principais quebras de expectativa entre o que o time esperava (doc) e o que encontrou (codex)..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+        </form>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-500 py-12 border-t border-slate-800 no-print">
+        <div class="container mx-auto px-6 text-center">
+            <p class="text-xs font-bold tracking-[0.3em] uppercase mb-4">Relatório Gerado via Monotto Audit Tool</p>
+            <p class="text-[10px] max-w-lg mx-auto leading-loose opacity-50">Este documento auxilia no processo de Due Diligence técnica e não substitui a revisão manual de segurança. Todos os dados preenchidos são armazenados localmente no navegador até a geração do PDF.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Sistema de salvamento automático em rascunho
+        const form = document.getElementById('auditForm');
+        
+        function saveDraft() {
+            const formData = {};
+            const elements = form.querySelectorAll('input, textarea, select');
+            elements.forEach(el => {
+                if (el.type === 'checkbox') {
+                    formData[el.name] = el.checked;
+                } else {
+                    formData[el.name] = el.value;
+                }
+            });
+            localStorage.setItem('monotto_backend_audit_v1', JSON.stringify(formData));
+            
+            // Visual feedback
+            const btn = document.querySelector('button[onclick="saveDraft()"]');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check text-green-400"></i> Salvo!';
+            setTimeout(() => btn.innerHTML = original, 2000);
+        }
+
+        function loadDraft() {
+            const saved = localStorage.getItem('monotto_backend_audit_v1');
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.keys(data).forEach(key => {
+                    const el = form.elements[key];
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = data[key];
+                        else el.value = data[key];
+                    }
+                });
+            }
+        }
+
+        window.onload = loadDraft;
+    </script>
+</body>
+</html>

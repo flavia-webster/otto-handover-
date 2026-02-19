@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Técnico de Auditoria - OTTO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .sidebar-link {
+            transition: all 0.3s;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border-right: 4px solid #ef4444; /* OTTO Red */
+        }
+
+        /* Cores da Identidade Visual */
+        .bg-otto-red { background-color: #F00020; }
+        .bg-oto-pink { background-color: #FF3162; }
+        .text-otto-red { color: #F00020; }
+        .text-oto-pink { color: #FF3162; }
+        
+        .code-block {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        
+        .hidden-section {
+            display: none;
+        }
+        
+        .risk-badge-critical { background-color: #fee2e2; color: #991b1b; }
+        .risk-badge-medium { background-color: #fef3c7; color: #92400e; }
+        .risk-badge-low { background-color: #d1fae5; color: #065f46; }
+
+        .arch-badge {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col justify-between">
+        <div>
+            <div class="h-16 flex items-center px-6 border-b border-gray-200">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-otto-red rounded-lg flex items-center justify-center text-white font-bold">O</div>
+                    <span class="font-bold text-lg text-gray-800">OTTO <span class="text-xs font-normal text-gray-500">Auditoria</span></span>
+                </div>
+            </div>
+            <nav class="mt-6 flex flex-col gap-1">
+                <a href="#" onclick="showSection('overview')" id="nav-overview" class="sidebar-link active flex items-center px-6 py-3 text-gray-600">
+                    <i class="fas fa-chart-pie w-6"></i>
+                    <span class="font-medium">Visão Geral</span>
+                </a>
+                <a href="#" onclick="showSection('architecture')" id="nav-architecture" class="sidebar-link flex items-center px-6 py-3 text-gray-600">
+                    <i class="fas fa-sitemap w-6"></i>
+                    <span class="font-medium">Arquitetura e Padrões</span>
+                </a>
+                <a href="#" onclick="showSection('scripts')" id="nav-scripts" class="sidebar-link flex items-center px-6 py-3 text-gray-600">
+                    <i class="fas fa-code w-6"></i>
+                    <span class="font-medium">Análise de Scripts</span>
+                </a>
+                <a href="#" onclick="showSection('identity')" id="nav-identity" class="sidebar-link flex items-center px-6 py-3 text-gray-600">
+                    <i class="fas fa-palette w-6"></i>
+                    <span class="font-medium">Identidade Visual</span>
+                </a>
+                <a href="#" onclick="showSection('recommendations')" id="nav-recommendations" class="sidebar-link flex items-center px-6 py-3 text-gray-600">
+                    <i class="fas fa-clipboard-check w-6"></i>
+                    <span class="font-medium">Plano de Ação</span>
+                </a>
+            </nav>
+        </div>
+        <div class="p-4 border-t border-gray-200">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <i class="fas fa-user-shield text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium">Auditor Técnico</p>
+                    <p class="text-xs text-gray-500">Acesso: Admin</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-8">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800" id="page-title">Visão Geral do Projeto</h1>
+                <p class="text-sm text-gray-500">Última atualização: 18 Fev 2026</p>
+            </div>
+            <div class="flex gap-3">
+                <button class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm">
+                    <i class="fas fa-download mr-2"></i> Exportar PDF
+                </button>
+            </div>
+        </header>
+
+        <!-- SECTION: VISÃO GERAL -->
+        <div id="section-overview" class="space-y-6">
+            <!-- KPIs -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="card p-6 border-l-4 border-red-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Score de Segurança</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-2">45<span class="text-sm text-gray-400">/100</span></h3>
+                        </div>
+                        <div class="p-2 bg-red-100 rounded-lg">
+                            <i class="fas fa-shield-alt text-red-600"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-red-600 mt-2 font-medium"><i class="fas fa-arrow-down mr-1"></i> Crítico</p>
+                </div>
+
+                <div class="card p-6 border-l-4 border-yellow-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Maturidade DevOps</p>
+                            <h3 class="text-xl font-bold text-gray-800 mt-2">Nível 2</h3>
+                        </div>
+                        <div class="p-2 bg-yellow-100 rounded-lg">
+                            <i class="fas fa-cogs text-yellow-600"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-yellow-600 mt-2 font-medium">Processos Manuais Repetíveis</p>
+                </div>
+
+                <div class="card p-6 border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Arquitetura Alvo</p>
+                            <h3 class="text-xl font-bold text-gray-800 mt-2">Clean Arch</h3>
+                        </div>
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <i class="fas fa-layer-group text-blue-600"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Transição em andamento</p>
+                </div>
+
+                <div class="card p-6 border-l-4 border-purple-600">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Ecossistema</p>
+                            <h3 class="text-xl font-bold text-purple-600 mt-2">Híbrido</h3>
+                        </div>
+                        <div class="p-2 bg-purple-100 rounded-lg">
+                            <i class="fas fa-mobile-alt text-purple-600"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-purple-600 mt-2 font-medium">Flutter + React + Node</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="card p-6 lg:col-span-2">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Mapeamento de Riscos vs. Padrões</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium">Arquitetura Mobile (Clean Arch)</span>
+                                <span class="text-green-600 font-bold">Sólido</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-green-600 h-2.5 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium">Frontend Web (React/Atomic)</span>
+                                <span class="text-green-500 font-bold">Bom</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-green-500 h-2.5 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium">Infraestrutura Operacional</span>
+                                <span class="text-red-500 font-bold">Crítico</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-red-500 h-2.5 rounded-full" style="width: 20%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6 bg-slate-800 text-white">
+                    <h3 class="text-lg font-bold mb-4">Status do Handover</h3>
+                    <p class="text-sm text-gray-300 mb-4 leading-relaxed">
+                        O projeto possui uma <strong>Arquitetura de Software</strong> bem definida (Clean Arch, Null Safety), mas sofre riscos severos na <strong>Infraestrutura Operacional</strong> (Scripts manuais, hardcodes).
+                    </p>
+                    <button onclick="showSection('architecture')" class="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-bold transition">
+                        Ver Detalhes da Arquitetura
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: ARQUITETURA E PADRÕES (NOVA) -->
+        <div id="section-architecture" class="hidden-section space-y-6">
+            <h3 class="text-xl font-bold text-gray-800 border-b pb-2">Padrões de Engenharia Definidos (Handover)</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Mobile Architecture -->
+                <div class="card p-6">
+                    <span class="arch-badge bg-blue-100 text-blue-700">Mobile (Flutter)</span>
+                    <h4 class="text-lg font-bold mb-3">Ecossistema & Pacotes</h4>
+                    <div class="space-y-4 text-sm text-gray-600">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-folder-plus mt-1 text-green-500"></i>
+                            <div>
+                                <strong class="text-gray-800">App_ns (Null Safety):</strong>
+                                <p>Destino obrigatório de novas features. Segue estritamente Clean Architecture.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-layer-group mt-1 text-gray-400"></i>
+                            <div>
+                                <strong class="text-gray-800">Core & Native:</strong>
+                                <p>Código compartilhado e ponte com hardware. Sem regras de negócio.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-cubes mt-1 text-purple-500"></i>
+                            <div>
+                                <strong class="text-gray-800">Gerência de Estado:</strong>
+                                <p>Uso rigoroso de <code>BLoC</code> apenas para UI State. Regra de negócio delegada a <code>UseCases</code>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backend Architecture -->
+                <div class="card p-6">
+                    <span class="arch-badge bg-green-100 text-green-700">Backend (Node/GraphQL)</span>
+                    <h4 class="text-lg font-bold mb-3">API & Segurança</h4>
+                    <div class="space-y-4 text-sm text-gray-600">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-shield-alt mt-1 text-green-600"></i>
+                            <div>
+                                <strong class="text-gray-800">Diretivas Customizadas:</strong>
+                                <p>Validação de contratos (CPF, Email) direto no Schema GraphQL.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-bug mt-1 text-red-400"></i>
+                            <div>
+                                <strong class="text-gray-800">Tratamento de Erros:</strong>
+                                <p>Uso de <code>OttoBaseError</code> para sanitizar erros sensíveis antes de chegar ao client.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-bolt mt-1 text-yellow-500"></i>
+                            <div>
+                                <strong class="text-gray-800">Performance:</strong>
+                                <p>Otimização de N+1 queries utilizando <code>DataLoaders</code>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frontend Web -->
+                <div class="card p-6">
+                    <span class="arch-badge bg-orange-100 text-orange-700">Frontend (Web)</span>
+                    <h4 class="text-lg font-bold mb-3">React & Design System</h4>
+                    <div class="space-y-4 text-sm text-gray-600">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-project-diagram mt-1 text-blue-500"></i>
+                            <div>
+                                <strong class="text-gray-800">Monorepo:</strong>
+                                <p>Separação clara: <code>@otto/business-front</code> (Lógica) vs <code>@otto/ui-kit</code> (Visual).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-atom mt-1 text-purple-500"></i>
+                            <div>
+                                <strong class="text-gray-800">Design Atômico:</strong>
+                                <p>Componentes organizados em Atoms, Molecules e Organisms.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-ban mt-1 text-red-500"></i>
+                            <div>
+                                <strong class="text-gray-800">Storybook:</strong>
+                                <p>Decisão estratégica de remoção devido a peso excessivo e baixo uso.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DevOps -->
+                <div class="card p-6">
+                    <span class="arch-badge bg-gray-100 text-gray-700">DevOps & QA</span>
+                    <h4 class="text-lg font-bold mb-3">Ciclo de Vida</h4>
+                    <div class="space-y-4 text-sm text-gray-600">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-rocket mt-1 text-blue-600"></i>
+                            <div>
+                                <strong class="text-gray-800">Pipeline de Deploy:</strong>
+                                <p>Fluxo semanal via Codemagic: <code>develop</code> → <code>qa</code> (Firebase) → <code>master</code>.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-vial mt-1 text-green-500"></i>
+                            <div>
+                                <strong class="text-gray-800">Testes Obrigatórios:</strong>
+                                <p>Unitários, Widget e Integração (Mobile); Jest/Cypress (Web).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: ANÁLISE DE SCRIPTS -->
+        <div id="section-scripts" class="hidden-section space-y-6">
+            <div class="card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Matriz de Auditoria de Scripts (Operacional)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 uppercase tracking-wider">
+                                <th class="p-3">Arquivo / Script</th>
+                                <th class="p-3">Tipo</th>
+                                <th class="p-3">Risco</th>
+                                <th class="p-3">Principais Descobertas</th>
+                                <th class="p-3">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <!-- Item 1 -->
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-3 font-medium text-gray-800">
+                                    <i class="fas fa-file-code text-blue-500 mr-2"></i> apollo.ts
+                                </td>
+                                <td class="p-3 text-gray-500">Frontend / Config</td>
+                                <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold risk-badge-critical">CRÍTICO</span></td>
+                                <td class="p-3 text-gray-600">
+                                    <ul class="list-disc pl-4 space-y-1">
+                                        <li>Token Hardcoded ("mock-token...")</li>
+                                        <li>Race condition no Auth</li>
+                                        <li>Mistura lógica Vite/Node</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3">
+                                    <button onclick="toggleDetails('details-apollo')" class="text-blue-600 hover:text-blue-800 text-xs font-bold underline">Detalhes</button>
+                                </td>
+                            </tr>
+                            <!-- Details Row -->
+                            <tr id="details-apollo" class="hidden bg-gray-50">
+                                <td colspan="5" class="p-4">
+                                    <div class="code-block text-xs">
+                                        // Trecho problemático identificado:<br>
+                                        const token = "mock-token-para-dev"; // 🔴 HARDCODED<br>
+                                        // import.meta.env quebra em scripts backend<br>
+                                        const httpLink = createHttpLink({ uri: import.meta.env.VITE_API_URL });
+                                    </div>
+                                    <p class="mt-2 text-xs text-red-600"><strong>Impacto:</strong> Risco de vazamento de credenciais e falha silenciosa de autenticação.</p>
+                                </td>
+                            </tr>
+
+                            <!-- Item 2 -->
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-3 font-medium text-gray-800">
+                                    <i class="fas fa-database text-gray-500 mr-2"></i> db_maintenance.sql
+                                </td>
+                                <td class="p-3 text-gray-500">SQL Manual</td>
+                                <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold risk-badge-critical">CRÍTICO</span></td>
+                                <td class="p-3 text-gray-600">
+                                    <ul class="list-disc pl-4 space-y-1">
+                                        <li>Deleção manual em produção</li>
+                                        <li>Sem logs de auditoria</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3">
+                                    <button class="text-gray-400 cursor-not-allowed text-xs font-bold">N/A</button>
+                                </td>
+                            </tr>
+
+                            <!-- Item 3 -->
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-3 font-medium text-gray-800">
+                                    <i class="fas fa-terminal text-gray-500 mr-2"></i> logs_extract.sh
+                                </td>
+                                <td class="p-3 text-gray-500">Shell / AWS CLI</td>
+                                <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold risk-badge-medium">MÉDIO</span></td>
+                                <td class="p-3 text-gray-600">
+                                    <ul class="list-disc pl-4 space-y-1">
+                                        <li>Exposição de PII localmente</li>
+                                        <li>Limpeza manual de evidências</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3">
+                                    <button class="text-gray-400 cursor-not-allowed text-xs font-bold">N/A</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: IDENTIDADE VISUAL -->
+        <div id="section-identity" class="hidden-section space-y-6">
+            <div class="card p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Conflito de Identidade Detectado</h3>
+                <p class="text-sm text-gray-600 mb-6">A análise encontrou ambiguidade na definição da marca "OTTO". Selecione o perfil que corresponde ao seu projeto para ajustar o <code>@otto/ui-kit</code>.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Scenario A -->
+                    <div class="border rounded-xl p-6 hover:shadow-lg transition relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-oto-pink"></div>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-oto-pink rounded-lg shadow-lg flex items-center justify-center text-white text-xl font-bold">O</div>
+                            <h4 class="text-xl font-bold text-gray-800">Cenário A: Oto CRM</h4>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4">Varejo físico, focado em vendedores e gamificação.</p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span>Cor Primária:</span>
+                                <div class="flex items-center gap-2">
+                                    <code class="text-xs bg-gray-100 p-1 rounded">#FF3162</code>
+                                    <div class="w-4 h-4 rounded bg-oto-pink"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Estilo:</span>
+                                <span class="font-medium">Mobile-first, Clean</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scenario B -->
+                    <div class="border rounded-xl p-6 hover:shadow-lg transition relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-otto-red"></div>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-otto-red rounded-lg shadow-lg flex items-center justify-center text-white text-xl font-bold">O</div>
+                            <h4 class="text-xl font-bold text-gray-800">Cenário B: Otto Group</h4>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4">E-commerce global, design system corporativo.</p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span>Cor Primária:</span>
+                                <div class="flex items-center gap-2">
+                                    <code class="text-xs bg-gray-100 p-1 rounded">#F00020</code>
+                                    <div class="w-4 h-4 rounded bg-otto-red"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Estilo:</span>
+                                <span class="font-medium">Grid 12 col, Corporativo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 bg-blue-50 border border-blue-200 p-4 rounded-lg flex gap-3">
+                    <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                    <div>
+                        <h5 class="text-sm font-bold text-blue-800">Recomendação</h5>
+                        <p class="text-xs text-blue-700">Verifique o arquivo <code>App_ns/theme.dart</code> ou <code>tailwind.config.js</code>. Se encontrar <strong>#FF3162</strong>, siga o Cenário A. Se encontrar <strong>#F00020</strong>, siga o Cenário B.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: RECOMENDAÇÕES -->
+        <div id="section-recommendations" class="hidden-section space-y-6">
+            <h3 class="text-xl font-bold text-gray-800">Plano de Mitigação Imediata</h3>
+            
+            <div class="space-y-4">
+                <!-- Step 1 -->
+                <div class="card p-6 border-l-4 border-red-600">
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold flex-shrink-0">1</div>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800">Sanitização de Credenciais</h4>
+                            <p class="text-sm text-gray-600 mt-1">Remover imediatamente o token hardcoded de <code>apollo.ts</code>. Implementar leitura de <code>process.env</code> ou secrets manager.</p>
+                            <div class="mt-3 bg-gray-800 text-gray-200 p-3 rounded text-xs font-mono">
+                                - const token = "mock-token-para-dev";<br>
+                                + const token = await authService.getToken() || process.env.DEV_TOKEN;
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="card p-6 border-l-4 border-orange-500">
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold flex-shrink-0">2</div>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800">Bloqueio de Scripts Manuais</h4>
+                            <p class="text-sm text-gray-600 mt-1">Revogar permissões de escrita direta no banco de dados de produção. Transformar o script <code>db_maintenance.sql</code> em uma rotina de Backoffice com log de auditoria.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="card p-6 border-l-4 border-blue-500">
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold flex-shrink-0">3</div>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800">Refatoração Estrutural</h4>
+                            <p class="text-sm text-gray-600 mt-1">Mover <code>apollo.ts</code> para dentro de <code>src/infra/graphql</code> e remover dependências de <code>import.meta</code> se o arquivo for compartilhado com Node.js.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Logic to handle navigation
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.hidden-section').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.getElementById('section-overview').style.display = 'none';
+
+            // Show selected section
+            document.getElementById(`section-${sectionId}`).style.display = 'block';
+
+            // Update title
+            const titles = {
+                'overview': 'Visão Geral do Projeto',
+                'scripts': 'Auditoria de Scripts (/scripts)',
+                'architecture': 'Arquitetura e Padrões Técnicos',
+                'identity': 'Análise de Identidade Visual',
+                'recommendations': 'Plano de Ação e Correção'
+            };
+            document.getElementById('page-title').innerText = titles[sectionId];
+
+            // Update Sidebar Active State
+            document.querySelectorAll('.sidebar-link').forEach(el => {
+                el.classList.remove('active', 'bg-gray-100', 'border-r-4', 'border-red-500');
+            });
+            const activeLink = document.getElementById(`nav-${sectionId}`);
+            if(activeLink) activeLink.classList.add('active');
+        }
+
+        // Logic for toggling details in the table
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure Overview is shown by default (already handled by HTML structure but good for safety)
+        });
+    </script>
+</body>
+</html>

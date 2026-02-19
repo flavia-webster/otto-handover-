@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monotto | Infraestrutura de Desenvolvimento</title>
+    <!-- Bibliotecas Externas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Chosen Palette: Slate & Indigo - Estética técnica, sóbria e profissional com alto contraste para leitura -->
+    <!-- Application Structure Plan: 
+         A aplicação foi estruturada como um "Blueprint Interativo". 
+         1. Dashboard Executivo: Resumo rápido das versões e tecnologias core.
+         2. Mapa de Arquitetura em 3 Colunas: Reflete as 3 camadas do relatório (Host, Rede, Container). Escolhido para demonstrar a separação física e lógica.
+         3. Painel de Inspecção (Lateral): Onde os detalhes granulares do relatório são exibidos dinamicamente.
+         4. Protocolo de Conectividade e Estratégia: Seção dedicada ao TypeORM e Pool de Conexões com gráfico.
+         5. Guia de Manutenção: Transformação das notas de manutenção em um guia de troubleshooting orientado a tarefas.
+    -->
+    <!-- Visualization & Content Choices:
+         - Diagrama de Fluxo (HTML/CSS): Permite interação direta com as variáveis do sistema.
+         - Simulação de Pulso (JS): Visualiza o "PostgreSQL Wire Protocol" atravessando as camadas.
+         - Gráfico de Recursos (Chart.js): Ilustra a eficiência da estratégia de Connection Pool.
+         - Cards Técnicos: Agrupamento de informações por afinidade técnica (SO, Runtime, Rede).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px;
+            max-height: 300px;
+        }
+
+        .layer-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .node-interactive {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .node-interactive:hover {
+            transform: scale(1.02);
+            border-color: #6366f1;
+            background-color: #f8fafc;
+        }
+
+        .node-active {
+            border-color: #4f46e5 !important;
+            background-color: #eef2ff !important;
+            box-shadow: 0 0 15px -3px rgba(79, 70, 229, 0.2);
+        }
+
+        .connection-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 40;
+            box-shadow: 0 0 10px #22c55e;
+            display: none;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .flow-highlight {
+            animation: pulse-green 1s infinite;
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+        }
+
+        .details-enter {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-900 leading-relaxed">
+
+    <!-- Header Profissional -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-[100]">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center text-white font-bold">M</div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Monotto <span class="text-indigo-600">Infrastructure</span></h1>
+                    <p class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Technical Blueprint v1.0</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <nav class="hidden md:flex gap-6 text-sm font-medium text-slate-500">
+                    <a href="#overview" class="hover:text-indigo-600 transition-colors">Overview</a>
+                    <a href="#blueprint" class="hover:text-indigo-600 transition-colors">Interativo</a>
+                    <a href="#config" class="hover:text-indigo-600 transition-colors">Estratégia</a>
+                </nav>
+                <div class="h-6 w-[1px] bg-slate-200"></div>
+                <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500">node: 16.17.1</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-12">
+
+        <!-- Seção de Introdução Didática -->
+        <section id="overview" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+            <div class="lg:col-span-2">
+                <h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl mb-4">Arquitetura de Desenvolvimento</h2>
+                <p class="text-lg text-slate-600">
+                    Este ambiente foi projetado para simular alta fidelidade com produção, isolando o banco de dados em containers enquanto mantém a agilidade de execução do Node.js nativo no Windows via WSL2.
+                </p>
+                <div class="mt-6 flex flex-wrap gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-medium text-slate-600">
+                        <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Windows Host
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-medium text-slate-600">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span> Docker Bridge
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-medium text-slate-600">
+                        <span class="w-2 h-2 bg-slate-800 rounded-full"></span> PostgreSQL 11
+                    </div>
+                </div>
+            </div>
+            <div class="bg-indigo-600 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
+                <div class="relative z-10">
+                    <h3 class="text-lg font-bold mb-2">Objetivo do Sistema</h3>
+                    <p class="text-indigo-100 text-sm">Tradução transparente de requisições entre ambientes Windows e Linux para desenvolvimento full-stack sem overhead.</p>
+                </div>
+                <div class="absolute -right-4 -bottom-4 text-white/10 text-9xl font-bold italic">!</div>
+            </div>
+        </section>
+
+        <!-- Blueprint Interativo Principal -->
+        <section id="blueprint" class="scroll-mt-24">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <!-- Toolbar do Mapa -->
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Exploração Técnica</span>
+                        <h3 class="text-lg font-bold text-slate-800">Mapa Visual de Dependências</h3>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="animatePacket()" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-all active:scale-95 shadow-lg shadow-indigo-100">
+                            <span>Testar Conexão TCP</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col lg:flex-row min-h-[650px]">
+                    <!-- Canvas do Diagrama -->
+                    <div class="flex-1 p-8 bg-slate-50/50 relative overflow-hidden">
+                        
+                        <!-- Elemento Animado de Fluxo -->
+                        <div id="packet" class="connection-dot"></div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 h-full">
+                            
+                            <!-- COLUNA 1: HOST WINDOWS -->
+                            <div class="space-y-6 relative">
+                                <div class="text-center py-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Camada 01</span>
+                                    <p class="text-xs font-bold text-slate-700">HOST (WINDOWS)</p>
+                                </div>
+
+                                <div class="h-[calc(100%-60px)] bg-white/40 border-2 border-dashed border-slate-200 rounded-2xl p-4 flex flex-col gap-4">
+                                    
+                                    <!-- Componente: Runtime -->
+                                    <div id="node-runtime" class="node-interactive p-4 bg-white rounded-xl shadow-sm border border-slate-200" onclick="updateDetails('runtime')">
+                                        <div class="flex justify-between items-start">
+                                            <span class="text-[10px] font-mono text-indigo-500 font-bold">RUNTIME</span>
+                                            <span class="text-[10px] text-slate-400">Node v16</span>
+                                        </div>
+                                        <p class="font-bold text-slate-800 mt-1">Ambiente de Execução</p>
+                                        <p class="text-[11px] text-slate-500">MinGW64 / Git Bash</p>
+                                    </div>
+
+                                    <!-- Componente: API -->
+                                    <div id="node-api" class="node-interactive p-4 bg-white rounded-xl shadow-sm border border-slate-200" onclick="updateDetails('api')">
+                                        <div class="flex justify-between items-start">
+                                            <span class="text-[10px] font-mono text-indigo-500 font-bold">CLIENT</span>
+                                            <span class="text-[10px] text-slate-400">Yarn Berry</span>
+                                        </div>
+                                        <p class="font-bold text-slate-800 mt-1">backoffice-api</p>
+                                        <p class="text-[11px] text-slate-500">TypeORM Connection Pool</p>
+                                    </div>
+
+                                    <!-- Componente: Porta Host -->
+                                    <div id="node-p5434" class="node-interactive mt-auto p-3 bg-indigo-50 rounded-lg border border-indigo-100 text-center" onclick="updateDetails('network')">
+                                        <p class="text-[10px] font-bold text-indigo-400 uppercase">Porta Host</p>
+                                        <p class="text-lg font-mono font-bold text-indigo-700">5434</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- COLUNA 2: BRIDGE (NETWORK) -->
+                            <div class="flex flex-col justify-center gap-6 relative">
+                                <div class="text-center py-2">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Conectividade</span>
+                                </div>
+                                
+                                <div class="flex-1 flex flex-col items-center justify-center gap-8 px-4">
+                                    <div class="w-full h-[2px] bg-slate-200 relative hidden md:block">
+                                        <div class="absolute -top-1.5 left-0 w-3 h-3 bg-slate-200 rounded-full"></div>
+                                        <div class="absolute -top-1.5 right-0 w-3 h-3 bg-slate-200 rounded-full"></div>
+                                    </div>
+
+                                    <div id="node-bridge" class="node-interactive w-full bg-white p-6 rounded-2xl shadow-md border border-slate-100 text-center relative group" onclick="updateDetails('bridge')">
+                                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">LOOPBACK</div>
+                                        <p class="font-bold text-slate-800">Docker Proxy</p>
+                                        <p class="text-xs text-slate-500 font-mono mt-1">127.0.0.1</p>
+                                        
+                                        <div class="mt-4 flex justify-center gap-2">
+                                            <span class="w-1.5 h-1.5 bg-blue-200 rounded-full"></span>
+                                            <span class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></span>
+                                            <span class="w-1.5 h-1.5 bg-blue-200 rounded-full"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="w-full h-[2px] bg-slate-200 relative hidden md:block">
+                                        <div class="absolute -top-1.5 left-0 w-3 h-3 bg-slate-200 rounded-full"></div>
+                                        <div class="absolute -top-1.5 right-0 w-3 h-3 bg-slate-200 rounded-full"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- COLUNA 3: CONTAINER (LINUX) -->
+                            <div class="space-y-6 relative">
+                                <div class="text-center py-2 bg-slate-800 rounded-lg border border-slate-700 shadow-sm">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Camada 03</span>
+                                    <p class="text-xs font-bold text-white">CONTAINER (DOCKER)</p>
+                                </div>
+
+                                <div class="h-[calc(100%-60px)] bg-slate-900 border border-slate-700 rounded-2xl p-4 flex flex-col gap-4 shadow-2xl">
+                                    
+                                    <!-- Porta Container -->
+                                    <div id="node-p5432" class="node-interactive p-3 bg-slate-800 rounded-lg border border-slate-700 text-center" onclick="updateDetails('network')">
+                                        <p class="text-[10px] font-bold text-slate-500 uppercase">Porta Container</p>
+                                        <p class="text-lg font-mono font-bold text-green-400">5432</p>
+                                    </div>
+
+                                    <!-- Componente: Postgres -->
+                                    <div id="node-postgres" class="node-interactive p-4 bg-slate-800 rounded-xl border border-slate-700 mt-4" onclick="updateDetails('postgres')">
+                                        <div class="flex justify-between items-start">
+                                            <span class="text-[10px] font-mono text-green-400 font-bold">DATABASE</span>
+                                            <span class="text-[10px] text-slate-500 italic">v11.5</span>
+                                        </div>
+                                        <p class="font-bold text-white mt-1">PostgreSQL Engine</p>
+                                        <p class="text-[11px] text-slate-400">Alpine Linux based</p>
+                                        
+                                        <div class="mt-4 p-2 bg-slate-950 rounded text-[9px] font-mono text-slate-500 border border-slate-800">
+                                            METHOD: trust (pg_hba.conf)
+                                        </div>
+                                    </div>
+
+                                    <!-- Volume -->
+                                    <div id="node-volume" class="node-interactive mt-auto p-4 bg-slate-800/50 rounded-xl border border-dashed border-slate-700" onclick="updateDetails('volume')">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-2 h-2 bg-slate-600 rounded-full"></div>
+                                            <p class="text-[10px] font-bold text-slate-500 uppercase">Volume Persistente</p>
+                                        </div>
+                                        <p class="text-[11px] text-slate-400 font-mono break-all">/var/lib/postgresql/data</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar de Detalhes -->
+                    <div class="w-full lg:w-[400px] border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col">
+                        <div class="p-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Inspeção de Objeto</span>
+                            <span id="detail-badge" class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-600 text-[10px] font-bold">PRONTO</span>
+                        </div>
+                        <div id="detail-panel" class="flex-1 p-6 overflow-y-auto">
+                            <!-- Estado Vazio -->
+                            <div class="flex flex-col items-center justify-center h-full text-center space-y-4 text-slate-400">
+                                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-2xl">🔍</div>
+                                <div>
+                                    <p class="font-medium">Nenhum elemento selecionado</p>
+                                    <p class="text-xs">Selecione um componente no mapa para ver suas propriedades técnicas.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-slate-50 border-t border-slate-200">
+                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">ℹ</div>
+                                <p class="text-[10px] text-slate-500 leading-tight">Os dados apresentados são derivados diretamente da especificação de infraestrutura Monotto.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção de Estratégia de Conexão -->
+        <section id="config" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col">
+                <div class="mb-6">
+                    <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Estratégia de Performance</span>
+                    <h3 class="text-2xl font-bold text-slate-900 mt-1">Otimização de Pool TCP</h3>
+                    <p class="text-slate-500 text-sm mt-2">A conexão não é efêmera. O TypeORM mantém um conjunto de conexões persistentes para evitar o "handshake overhead" em cada requisição de banco de dados.</p>
+                </div>
+                
+                <div class="flex-1 chart-container">
+                    <canvas id="strategyChart"></canvas>
+                </div>
+
+                <div class="mt-6 grid grid-cols-2 gap-4">
+                    <div class="p-3 bg-indigo-50 rounded-xl">
+                        <p class="text-[10px] font-bold text-indigo-400 uppercase">Vantagem</p>
+                        <p class="text-xs font-semibold text-indigo-900">Redução de Latência</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Recurso</p>
+                        <p class="text-xs font-semibold text-slate-900">Reuso de Sockets</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 rounded-2xl shadow-xl p-8 text-slate-300">
+                <div class="mb-6">
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Configuração do ORM</span>
+                    <h3 class="text-2xl font-bold text-white mt-1">A Fonte da Verdade</h3>
+                    <p class="text-slate-400 text-sm mt-2">Parâmetros definidos em <code>packages/backend/lib/database/ormconfig.js</code>.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700 font-mono text-xs">
+                        <div class="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
+                            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                            <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                            <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                        </div>
+                        <p><span class="text-indigo-400">const</span> config = {</p>
+                        <p class="pl-4">host: <span class="text-green-400">'127.0.0.1'</span>,</p>
+                        <p class="pl-4">port: <span class="text-orange-400">5434</span>,</p>
+                        <p class="pl-4">database: <span class="text-green-400">'monotto_dev'</span>,</p>
+                        <p class="pl-4">ssl: <span class="text-red-500">false</span>, <span class="text-slate-500">// Local bypass</span></p>
+                        <p class="pl-4">extra: {</p>
+                        <p class="pl-8">max: <span class="text-orange-400">20</span>,</p>
+                        <p class="pl-8">idleTimeoutMillis: <span class="text-orange-400">30000</span></p>
+                        <p class="pl-4">}</p>
+                        <p>};</p>
+                    </div>
+                    
+                    <div class="flex items-start gap-4 p-4 bg-indigo-900/20 rounded-xl border border-indigo-500/30">
+                        <span class="text-xl">💡</span>
+                        <div class="text-xs">
+                            <p class="font-bold text-indigo-200">Nota Didática</p>
+                            <p class="text-indigo-300/80 mt-1">Observe que o <span class="text-white italic">host</span> aponta para o Windows (127.0.0.1) e não para o IP interno do Docker. O Docker Desktop cuida do roteamento.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção de Resolução de Problemas -->
+        <section id="troubleshooting" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            <h3 class="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+                <span class="p-2 bg-orange-100 text-orange-600 rounded-lg text-lg">🛠</span>
+                Guia de Manutenção de Ambiente
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Task 1 -->
+                <div class="group border border-slate-100 bg-slate-50/50 p-6 rounded-2xl hover:bg-white hover:border-indigo-100 hover:shadow-lg transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Verificação 01</span>
+                        <span class="w-2 h-2 bg-green-500 rounded-full group-hover:animate-ping"></span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 mb-2">Health Check do Container</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-4">Se a API falha ao conectar, valide se o processo do Postgres está operante.</p>
+                    <div class="bg-slate-900 text-slate-400 p-3 rounded-lg font-mono text-[10px]">
+                        $ docker ps --filter name=otto-dev
+                    </div>
+                </div>
+
+                <!-- Task 2 -->
+                <div class="group border border-slate-100 bg-slate-50/50 p-6 rounded-2xl hover:bg-white hover:border-indigo-100 hover:shadow-lg transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Conflitos</span>
+                        <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 mb-2">Conflitos de Portas (Win)</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-4">A porta 5434 pode ser ocupada por outra instância do Postgres instalada no Windows.</p>
+                    <div class="bg-slate-900 text-slate-400 p-3 rounded-lg font-mono text-[10px]">
+                        $ netstat -ano | findstr :5434
+                    </div>
+                </div>
+
+                <!-- Task 3 -->
+                <div class="group border border-slate-100 bg-slate-50/50 p-6 rounded-2xl hover:bg-white hover:border-indigo-100 hover:shadow-lg transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Persistência</span>
+                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 mb-2">Volume vs Ciclo de Vida</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-4">A remoção do container não apaga dados a menos que o volume seja explicitamente destruído.</p>
+                    <div class="bg-slate-900 text-slate-400 p-3 rounded-lg font-mono text-[10px]">
+                        $ docker volume ls
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-6 h-6 bg-slate-200 rounded flex items-center justify-center text-slate-500 font-bold text-xs">M</div>
+                <p class="text-xs text-slate-400 font-medium tracking-tight uppercase">Monotto Technical Docs &bull; 2024</p>
+            </div>
+            <div class="flex gap-8 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                <span>Interno</span>
+                <span>Dev Only</span>
+                <span>Confidencial</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts de Interação -->
+    <script>
+        // Dados Técnicos Estruturados
+        const techSpecs = {
+            runtime: {
+                title: "Runtime de Execução",
+                badge: "HOST LAYER",
+                content: `
+                    <div class="space-y-4 details-enter">
+                        <p class="text-sm text-slate-600">A execução ocorre no contexto do Windows para facilitar o debug e integração com IDEs.</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="p-2 bg-slate-50 rounded border border-slate-100">
+                                <span class="text-[9px] text-slate-400 block">SO</span>
+                                <span class="text-xs font-bold">Windows 10/11</span>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded border border-slate-100">
+                                <span class="text-[9px] text-slate-400 block">NODE</span>
+                                <span class="text-xs font-bold">v16.17.1 (x64)</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Destaque Didático</p>
+                            <p class="text-xs text-slate-500 italic">O uso do Git Bash (MinGW64) permite comandos Unix em ambiente Windows nativo.</p>
+                        </div>
+                    </div>
+                `
+            },
+            api: {
+                title: "backoffice-api (Node.js)",
+                badge: "APP LAYER",
+                content: `
+                    <div class="space-y-4 details-enter">
+                        <p class="text-sm text-slate-600">Serviço principal orquestrado via monorepo.</p>
+                        <ul class="text-xs text-slate-500 space-y-2 list-disc pl-4">
+                            <li>Gerenciador: <span class="text-slate-800 font-bold">Yarn v3.5.0 (Berry)</span></li>
+                            <li>Modo: <span class="text-slate-800 font-bold">node-modules linker</span></li>
+                            <li>Path: <span class="font-mono text-[10px]">packages/backend/...</span></li>
+                        </ul>
+                    </div>
+                `
+            },
+            network: {
+                title: "Network Port Mapping",
+                badge: "PORT LAYER",
+                content: `
+                    <div class="space-y-4 details-enter">
+                        <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-indigo-700">Windows (Client)</span>
+                                <span class="font-mono">:5434</span>
+                            </div>
+                            <div class="my-2 flex justify-center text-indigo-300">↕ NAT ↕</div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-indigo-700">Docker (DB)</span>
+                                <span class="font-mono">:5432</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500">O mapeamento isola o banco de dados do sistema principal, prevenindo conflitos com outros serviços PostgreSQL.</p>
+                    </div>
+                `
+            },
+            bridge: {
+                title: "Docker Network Bridge",
+                badge: "BRIDGE",
+                content: `
+                    <div class="space-y-4 details-enter">
+                        <p class="text-sm text-slate-600">Ponte virtual operada pelo Docker Desktop sobre o subsistema WSL2.</p>
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-[11px] text-blue-800 font-medium">
+                            Conexão <span class="underline">Cleartext</span> (SSL: OFF). Justificativa: Infraestrutura local privada sem necessidade de criptografia em trânsito.
+                        </div>
+                    </div>
+                `
+            },
+            postgres: {
+                title: "PostgreSQL Container",
+                badge: "DATA LAYER",
+                content: `
+                    <div class="space-y-4 details-enter">
+                        <p class="text-sm text-slate-600">Instância isolada de banco de dados SQL.</p>
+                        <ul class="text-xs text-slate-500 space-y-2">
+                            <li><strong class="text-slate-800">Versão:</strong> 11.5 (Standard)</li>
+                            <li><strong class="text-slate-800">OS Base:</strong> Alpine Linux (Lightweight)</li>
+                            <li><strong class="text-slate-800">Auth:</strong> Método Trust habilitado para rede local.</li>
+                        </ul>
+                    </div>
+                `
+            },
+            volume: {
+                title: "Docker Data Volume",
+                badge: "STORAGE",
+                content: `
+                    <div class="space-y-4 details-enter">
+                        <p class="text-sm text-slate-600">Gerenciamento de persistência persistente.</p>
+                        <div class="p-3 bg-slate-100 rounded-lg font-mono text-[10px] text-slate-600 border border-slate-200">
+                            Volume: otto-dev-data <br>
+                            Mount: /var/lib/postgresql/data
+                        </div>
+                        <p class="text-[10px] text-slate-400">Os dados permanecem no disco do host mesmo após o comando <code>docker stop</code>.</p>
+                    </div>
+                `
+            }
+        };
+
+        // UI Logic
+        function updateDetails(key) {
+            const panel = document.getElementById('detail-panel');
+            const badge = document.getElementById('detail-badge');
+            const spec = techSpecs[key];
+
+            // Reset selection styling
+            document.querySelectorAll('.node-interactive').forEach(el => el.classList.remove('node-active'));
+            
+            // Map keys to specific UI element IDs
+            const idMap = {
+                runtime: 'node-runtime',
+                api: 'node-api',
+                network: 'node-p5434', // or p5432
+                bridge: 'node-bridge',
+                postgres: 'node-postgres',
+                volume: 'node-volume'
+            };
+            
+            if (idMap[key]) document.getElementById(idMap[key]).classList.add('node-active');
+
+            badge.innerText = spec.badge;
+            panel.innerHTML = `
+                <div class="details-enter">
+                    <h4 class="text-lg font-bold text-slate-900 mb-4">${spec.title}</h4>
+                    ${spec.content}
+                </div>
+            `;
+        }
+
+        async function animatePacket() {
+            const packet = document.getElementById('packet');
+            const nodes = [
+                document.getElementById('node-api'),
+                document.getElementById('node-p5434'),
+                document.getElementById('node-bridge'),
+                document.getElementById('node-p5432'),
+                document.getElementById('node-postgres')
+            ];
+
+            packet.style.display = 'block';
+
+            for (let node of nodes) {
+                // Posicionar pacote sobre o nó
+                const rect = node.getBoundingClientRect();
+                const canvasRect = node.closest('.flex-1').getBoundingClientRect();
+                
+                packet.style.top = `${rect.top - canvasRect.top + rect.height/2}px`;
+                packet.style.left = `${rect.left - canvasRect.left + rect.width/2}px`;
+                
+                node.classList.add('flow-highlight');
+                await new Promise(r => setTimeout(r, 600));
+                node.classList.remove('flow-highlight');
+            }
+
+            packet.style.display = 'none';
+        }
+
+        // Charts Init
+        window.onload = function() {
+            const ctx = document.getElementById('strategyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Conexões Ativas', 'Em Espera', 'Overflow Buffer'],
+                    datasets: [{
+                        data: [12, 4, 4],
+                        backgroundColor: ['#4f46e5', '#818cf8', '#e2e8f0'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // Start with a view
+            updateDetails('runtime');
+        };
+    </script>
+</body>
+</html>
