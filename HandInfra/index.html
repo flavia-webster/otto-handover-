@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handover: Infra & Arquitetura (Advanced) - Monotto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: { aws: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 900: '#7c2d12' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        .section-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.5rem; overflow: hidden; }
+        .section-header { background: #f8fafc; padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 0.5rem; }
+        .warning-box { background: #fff1f2; border-left: 4px solid #f43f5e; color: #9f1239; padding: 1rem; font-size: 0.85rem; margin-bottom: 1.5rem; }
+        @media print { .no-print { display: none !important; } body { background: white; } .section-card { break-inside: avoid; border: 1px solid #ccc; } textarea { border: none; border-bottom: 1px dashed #ccc; resize: none; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 p-4 md:p-8 max-w-5xl mx-auto">
+
+    <header class="flex justify-between items-end mb-8 border-b-4 border-aws-500 pb-4">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="bg-aws-100 text-aws-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest">Level 3 Audit</span>
+                <span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest">Confidential</span>
+            </div>
+            <h1 class="text-3xl font-black text-slate-900 uppercase tracking-tight">Infraestrutura & Arquitetura</h1>
+            <p class="text-slate-500 text-sm mt-1">Mapeamento de Topologia, Acessos e Variáveis de Ambiente.</p>
+        </div>
+        <button onclick="window.print()" class="no-print bg-aws-600 hover:bg-aws-700 text-white font-bold py-2 px-6 rounded shadow transition flex items-center gap-2">
+            <i class="fas fa-file-pdf"></i> Exportar PDF
+        </button>
+    </header>
+
+    <div class="warning-box">
+        <strong class="block uppercase tracking-wide mb-1"><i class="fas fa-shield-alt mr-1"></i> Protocolo de Segurança</strong>
+        Não insira senhas reais, chaves privadas ou tokens neste formulário. Utilize este documento para indicar <strong>ONDE</strong> as credenciais estão armazenadas (ex: 1Password, AWS Secrets Manager, LastPass) e quais são os nomes das chaves (Keys) necessárias.
+    </div>
+
+    <!-- 1. Credenciais e Acesso Mestre -->
+    <section class="section-card">
+        <div class="section-header"><i class="fas fa-key text-aws-600"></i> Gestão de Acessos & Credenciais (Vault)</div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Localização das Chaves Mestre</label>
+                <input type="text" class="w-full p-2 border border-slate-300 rounded text-sm bg-slate-50" placeholder="Ex: 1Password Vault 'Engenharia Shared'">
+                <p class="text-[10px] text-slate-400 mt-1">Onde encontrar AWS_ACCESS_KEY_ID e SECRET_KEY da conta root/admin?</p>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Método de Acesso ao Bastion/VPN</label>
+                <input type="text" class="w-full p-2 border border-slate-300 rounded text-sm bg-slate-50" placeholder="Ex: OpenVPN Profile + Authy 2FA">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Procedimento de Rotação de Credenciais</label>
+                <textarea rows="2" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="Como gerar novo acesso para um desenvolvedor novo?"></textarea>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Matriz de Variáveis de Ambiente -->
+    <section class="section-card">
+        <div class="section-header"><i class="fas fa-list-ul text-aws-600"></i> Matriz de Variáveis de Ambiente (ENVs)</div>
+        <div class="p-6">
+            <p class="text-xs text-slate-500 mb-4">Liste todas as variáveis necessárias para o sistema rodar. Não coloque o valor real.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="bg-slate-100 text-slate-500 uppercase text-xs">
+                        <tr>
+                            <th class="p-2 border">Nome da Variável (Key)</th>
+                            <th class="p-2 border">Descrição / Origem do Valor</th>
+                            <th class="p-2 border text-center">Crítico?</th>
+                        </tr>
+                    </thead>
+                    <tbody class="font-mono text-xs">
+                        <tr>
+                            <td class="p-2 border"><input type="text" class="w-full bg-transparent outline-none" placeholder="DB_HOST"></td>
+                            <td class="p-2 border"><input type="text" class="w-full bg-transparent outline-none" placeholder="Endpoint do RDS (Writer)"></td>
+                            <td class="p-2 border text-center"><input type="checkbox" checked></td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 border"><input type="text" class="w-full bg-transparent outline-none" placeholder="AWS_S3_BUCKET"></td>
+                            <td class="p-2 border"><input type="text" class="w-full bg-transparent outline-none" placeholder="Nome do bucket de uploads"></td>
+                            <td class="p-2 border text-center"><input type="checkbox" checked></td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 border"><input type="text" class="w-full bg-transparent outline-none" placeholder="PAYMENT_GATEWAY_KEY"></td>
+                            <td class="p-2 border"><input type="text" class="w-full bg-transparent outline-none" placeholder="Chave de Produção (Stripe/Pagar.me)"></td>
+                            <td class="p-2 border text-center"><input type="checkbox" checked></td>
+                        </tr>
+                         <tr>
+                            <td class="p-2 border"><input type="text" class="w-full bg-transparent outline-none" placeholder="..."></td>
+                            <td class="p-2 border"><input type="text" class="w-full bg-transparent outline-none" placeholder="..."></td>
+                            <td class="p-2 border text-center"><input type="checkbox"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Detalhamento AWS -->
+    <section class="section-card">
+        <div class="section-header"><i class="fab fa-aws text-aws-600"></i> Detalhamento de Serviços AWS</div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Serviços de Compute & Container</label>
+                <textarea rows="3" class="w-full p-2 border border-slate-300 rounded text-xs font-mono" placeholder="Ex: EKS Cluster v1.27, Lambda (Node 18), EC2 t3.medium (Bastion)"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Serviços de Dados & Storage</label>
+                <textarea rows="3" class="w-full p-2 border border-slate-300 rounded text-xs font-mono" placeholder="Ex: RDS Aurora Postgres (v14.6), ElastiCache Redis, S3 (Private ACL)"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Networking & Segurança</label>
+                <textarea rows="3" class="w-full p-2 border border-slate-300 rounded text-xs font-mono" placeholder="Ex: VPC (10.0.0.0/16), CloudFront + WAF, Route53 Zones"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Integração Externa (Third-Party)</label>
+                <textarea rows="3" class="w-full p-2 border border-slate-300 rounded text-xs font-mono" placeholder="Ex: SendGrid (Email), Twilio (SMS), Firebase (Push)"></textarea>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>
